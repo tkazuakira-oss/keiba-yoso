@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>競馬予想 20260815</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+         background: #f2f2f7; margin: 0; padding: 12px; color: #1c1c1e; }
+  h1 { font-size: 18px; margin: 4px 0 12px; }
+  .bias-panel { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+  .bias-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .bias-label { font-size: 13px; color: #666; width: 64px; flex-shrink: 0; }
+  .bias-btns { display: flex; gap: 6px; flex: 1; }
+  .bias-btn { flex: 1; padding: 8px 4px; font-size: 12px; border-radius: 8px; border: 1px solid #d1d1d6;
+              background: #f9f9f9; text-align: center; }
+  .bias-btn.active { background: #007aff; color: #fff; border-color: #007aff; }
+  .adjust-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: #666; }
+  .adjust-row input { width: 50px; padding: 4px; border: 1px solid #d1d1d6; border-radius: 6px; }
+  .race-card { background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+  .race-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid #efeff4; }
+  th { color: #888; font-weight: 500; font-size: 11px; }
+  .prob { font-weight: 600; }
+  .flag-warn { color: #ff3b30; font-size: 11px; }
+  .flag-star { color: #ff9500; font-size: 11px; }
+  .note { font-size: 11px; color: #999; margin-top: 6px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<h1>競馬予想 2026/08/15週末</h1>
+
+<div class="bias-panel">
+  <div class="bias-row">
+    <div class="bias-label">展開</div>
+    <div class="bias-btns" data-group="pace">
+      <div class="bias-btn active" data-val="flat">フラット</div>
+      <div class="bias-btn" data-val="front">前有利</div>
+      <div class="bias-btn" data-val="close">差し有利</div>
+    </div>
+  </div>
+  <div class="bias-row">
+    <div class="bias-label">枠</div>
+    <div class="bias-btns" data-group="waku">
+      <div class="bias-btn active" data-val="flat">フラット</div>
+      <div class="bias-btn" data-val="in">内有利</div>
+      <div class="bias-btn" data-val="out">外有利</div>
+    </div>
+  </div>
+  <div class="bias-row">
+    <div class="bias-label">馬場</div>
+    <div class="bias-btns" data-group="baba">
+      <div class="bias-btn active" data-val="flat">フラット</div>
+      <div class="bias-btn" data-val="fast">高速</div>
+      <div class="bias-btn" data-val="slow">時計かかる</div>
+    </div>
+  </div>
+  <div class="adjust-row">
+    調整幅: <input type="number" id="adjustAmount" value="7" min="0" max="30"> ポイント
+  </div>
+  <div class="note">
+    展開・馬場は同じ方向（前有利⇔高速、差し有利⇔時計かかる）に脚質を補正。枠は内外を独立に補正します。
+    この補正値に統計的な裏付けはなく、あきさんの経験則を数値化するための目安です。
+  </div>
+</div>
+
+<div id="races"></div>
+
+<div class="note" style="margin-top:8px;">
+  AI複勝確率は過去データによる参考値で、的中を保証するものではありません。
+  ⚠️AI警告＝人気の割にAIの評価が低い馬（#33/#38で確認した唯一の裏付けありシグナル）。
+  ★AI注目＝人気の割にAIの評価が高い馬（統計的な優位性は未確認、参考程度に）。
+</div>
+
+<script>
+const DATA = {"races": [{"venue": "札幌", "raceNum": 10, "raceId": "202601010710", "horses": [{"name": "エルサトアナ", "kishu": "遠藤", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "逃げ", "wakuHalf": "内", "baseProb": 5.3}, {"name": "ガットネロ", "kishu": "小沢", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 7.1}, {"name": "グランテレーズ", "kishu": "小沢", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "先行", "wakuHalf": "内", "baseProb": 20.6}, {"name": "コックオーヴァン", "kishu": "松岡", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "先行", "wakuHalf": "内", "baseProb": 24.6}, {"name": "スイミーユニバンス", "kishu": "鮫島駿", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "追込", "wakuHalf": "外", "baseProb": 3.8}, {"name": "ストレイトアスク", "kishu": "小林美", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "スムースベルベット", "kishu": "長浜", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "セイプリーズ", "kishu": "古川吉", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "先行", "wakuHalf": "外", "baseProb": 15.7}, {"name": "ハリウッドメモリー", "kishu": "横山和", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "差し", "wakuHalf": "外", "baseProb": 37.3}, {"name": "ピースフルナイト", "kishu": "斎藤", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ブライティアダイヤ", "kishu": "大久保", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "差し", "wakuHalf": "外", "baseProb": 3.0}, {"name": "ブルボンクイーン", "kishu": "角田和", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "先行", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ベニシア", "kishu": "原田和", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ベビーズブレス", "kishu": "西村淳", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "先行", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ミニョンマルーン", "kishu": "長浜", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "逃げ", "wakuHalf": "外", "baseProb": 10.8}, {"name": "ムチャスグラシアス", "kishu": "吉田隼", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "メイショウミリオレ", "kishu": "菱田", "ninki": 17, "odds": 10.0, "umaban": 17, "waku": 17, "style": "追込", "wakuHalf": "外", "baseProb": 12.0}, {"name": "モズトキキ", "kishu": "秋山稔", "ninki": 18, "odds": 10.0, "umaban": 18, "waku": 18, "style": "先行", "wakuHalf": "外", "baseProb": 4.6}]}, {"venue": "中京", "raceNum": 6, "raceId": "202607020706", "horses": [{"name": "アスゴッド", "kishu": "高杉", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "差し", "wakuHalf": "内", "baseProb": 12.0}, {"name": "インフローレ", "kishu": "岩田望", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "差し", "wakuHalf": "内", "baseProb": 20.3}, {"name": "シラヌイ", "kishu": "吉村", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "差し", "wakuHalf": "内", "baseProb": 10.3}, {"name": "タミゼ", "kishu": "田山", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "差し", "wakuHalf": "内", "baseProb": 13.0}, {"name": "トップアタック", "kishu": "小沢", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "逃げ", "wakuHalf": "外", "baseProb": 50.1}, {"name": "パリコレジェンヌ", "kishu": "田口", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "追込", "wakuHalf": "外", "baseProb": 7.1}, {"name": "ハルオーブ", "kishu": "酒井", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "追込", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ヒーローインチーフ", "kishu": "西塚", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "追込", "wakuHalf": "外", "baseProb": 24.6}, {"name": "ファイツオン", "kishu": "高杉", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "フォーゲル", "kishu": "坂井", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "先行", "wakuHalf": "外", "baseProb": 43.8}, {"name": "モンサンゴールデン", "kishu": "柴田裕", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "差し", "wakuHalf": "外", "baseProb": 32.2}, {"name": "モンテディアーナ", "kishu": "団野", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "先行", "wakuHalf": "外", "baseProb": 24.6}]}, {"venue": "新潟", "raceNum": 7, "raceId": "202604020707", "horses": [{"name": "アイアムユウシュン", "kishu": "小崎", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "先行", "wakuHalf": "内", "baseProb": 5.2}, {"name": "アメリカンチケット", "kishu": "小崎", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 12.5}, {"name": "イノセントキャット", "kishu": "田辺", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "先行", "wakuHalf": "内", "baseProb": 5.2}, {"name": "イミュータブル", "kishu": "長浜", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "先行", "wakuHalf": "内", "baseProb": 2.4}, {"name": "イリフィ", "kishu": "坂井", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "差し", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ヴェロクオーレ", "kishu": "酒井", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "先行", "wakuHalf": "外", "baseProb": 17.3}, {"name": "エンヤラヴフェイス", "kishu": "北村友", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "追込", "wakuHalf": "外", "baseProb": 15.1}, {"name": "クアトロジャック", "kishu": "吉村", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "クリノオリーブ", "kishu": "三浦", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ゲキザル", "kishu": "小林脩", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "追込", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ジャーヴィス", "kishu": "藤懸", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "追込", "wakuHalf": "外", "baseProb": 7.1}, {"name": "スノーサイレンス", "kishu": "吉村", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "先行", "wakuHalf": "外", "baseProb": 30.9}, {"name": "スプランドゥール", "kishu": "柴田大", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "追込", "wakuHalf": "外", "baseProb": 3.8}, {"name": "テーオーグレーザー", "kishu": "高杉", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "先行", "wakuHalf": "外", "baseProb": 30.9}, {"name": "ナッカーフェイス", "kishu": "秋山稔", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "追込", "wakuHalf": "外", "baseProb": 2.4}, {"name": "ハクサンアイリス", "kishu": "川田", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "パラサイコロジー", "kishu": "石田", "ninki": 17, "odds": 10.0, "umaban": 17, "waku": 17, "style": "先行", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ハリーケーン", "kishu": "幸", "ninki": 18, "odds": 10.0, "umaban": 18, "waku": 18, "style": "先行", "wakuHalf": "外", "baseProb": 7.1}, {"name": "ビバップ", "kishu": "吉村", "ninki": 19, "odds": 10.0, "umaban": 19, "waku": 19, "style": "先行", "wakuHalf": "外", "baseProb": 7.1}, {"name": "フウセツ", "kishu": "大野", "ninki": 20, "odds": 10.0, "umaban": 20, "waku": 20, "style": "逃げ", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ペレグリン", "kishu": "Ｍデムーロ", "ninki": 21, "odds": 10.0, "umaban": 21, "waku": 21, "style": "先行", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ホワイトガーベラ", "kishu": "田口", "ninki": 22, "odds": 10.0, "umaban": 22, "waku": 22, "style": "追込", "wakuHalf": "外", "baseProb": 3.0}, {"name": "ライジン", "kishu": "岩田望", "ninki": 23, "odds": 10.0, "umaban": 23, "waku": 23, "style": "差し", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ライトニングゼウス", "kishu": "川田", "ninki": 24, "odds": 10.0, "umaban": 24, "waku": 24, "style": "先行", "wakuHalf": "外", "baseProb": 20.6}, {"name": "ランウインディ", "kishu": "団野", "ninki": 25, "odds": 10.0, "umaban": 25, "waku": 25, "style": "先行", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ワークソング", "kishu": "ディー", "ninki": 26, "odds": 10.0, "umaban": 26, "waku": 26, "style": "差し", "wakuHalf": "外", "baseProb": 10.3}]}, {"venue": "札幌", "raceNum": 11, "raceId": "202601010711", "horses": [{"name": "アイウィル", "kishu": "丹内", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "差し", "wakuHalf": "内", "baseProb": 30.9}, {"name": "アスクケンタッキー", "kishu": "武豊", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 15.1}, {"name": "キャットテイル", "kishu": "横山武", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "逃げ", "wakuHalf": "内", "baseProb": 17.3}, {"name": "キュールエフウジン", "kishu": "横山琉", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "追込", "wakuHalf": "内", "baseProb": 3.0}, {"name": "ゲキザル", "kishu": "小林脩", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "追込", "wakuHalf": "外", "baseProb": 7.1}, {"name": "スマートカイロス", "kishu": "古川奈", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "逃げ", "wakuHalf": "外", "baseProb": 20.3}, {"name": "セボンサデッセ", "kishu": "武豊", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "先行", "wakuHalf": "外", "baseProb": 50.1}, {"name": "タイセイミッション", "kishu": "黛", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "トルショー", "kishu": "戸崎圭", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ノーブルスカイ", "kishu": "吉田隼", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "追込", "wakuHalf": "外", "baseProb": 2.4}, {"name": "プロミシングスター", "kishu": "秋山稔", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "マンオブザマッチ", "kishu": "荻野極", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "モズカトレア", "kishu": "田山", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "逃げ", "wakuHalf": "外", "baseProb": 13.0}, {"name": "レーウィン", "kishu": "吉田豊", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ロードブレイズ", "kishu": "横山和", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "差し", "wakuHalf": "外", "baseProb": 15.1}]}, {"venue": "中京", "raceNum": 7, "raceId": "202607020707", "horses": [{"name": "アラタマフェーヴル", "kishu": "松若", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "先行", "wakuHalf": "内", "baseProb": 20.3}, {"name": "カクウチ", "kishu": "小崎", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 20.3}, {"name": "キーパフォーマー", "kishu": "吉村", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "差し", "wakuHalf": "内", "baseProb": 12.5}, {"name": "シンゼンカガ", "kishu": "吉田隼", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "差し", "wakuHalf": "内", "baseProb": 26.7}, {"name": "ダノンジャイアン", "kishu": "鮫島駿", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "先行", "wakuHalf": "外", "baseProb": 50.1}, {"name": "ドットクルー", "kishu": "Ｍデムーロ", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "追込", "wakuHalf": "外", "baseProb": 13.0}, {"name": "バッデレイト", "kishu": "岩田望", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "差し", "wakuHalf": "外", "baseProb": 34.4}, {"name": "フィオレストラーダ", "kishu": "荻野極", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "先行", "wakuHalf": "外", "baseProb": 50.1}, {"name": "プリズマジコ", "kishu": "秋山稔", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "差し", "wakuHalf": "外", "baseProb": 20.3}]}, {"venue": "中京", "raceNum": 6, "raceId": "202607020806", "horses": [{"name": "アーリーハーベスト", "kishu": "坂井", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "逃げ", "wakuHalf": "内", "baseProb": 55.4}, {"name": "エアビッグマム", "kishu": "Ｍデムーロ", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 17.3}, {"name": "スターリングアップ", "kishu": "菱田", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "追込", "wakuHalf": "内", "baseProb": 30.9}, {"name": "ステラクラウン", "kishu": "岩田望", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "差し", "wakuHalf": "内", "baseProb": 64.7}, {"name": "パフュームセント", "kishu": "池添", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "先行", "wakuHalf": "外", "baseProb": 61.2}, {"name": "ホウオウタイタン", "kishu": "横山武", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "追込", "wakuHalf": "外", "baseProb": 50.1}, {"name": "レイピカケ", "kishu": "団野", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "追込", "wakuHalf": "外", "baseProb": 12.5}]}, {"venue": "札幌", "raceNum": 10, "raceId": "202601010810", "horses": [{"name": "ウーマンズパワー", "kishu": "横山琉", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "逃げ", "wakuHalf": "内", "baseProb": 30.9}, {"name": "オセアエクスプレス", "kishu": "三浦", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "差し", "wakuHalf": "内", "baseProb": 3.0}, {"name": "カッタッパ", "kishu": "阿部龍", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "先行", "wakuHalf": "内", "baseProb": 17.3}, {"name": "キャリーグレイス", "kishu": "舟山", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "先行", "wakuHalf": "内", "baseProb": 17.3}, {"name": "キーガッツ", "kishu": "斎藤", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "先行", "wakuHalf": "外", "baseProb": 13.0}, {"name": "クインズシフォン", "kishu": "小沢", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "差し", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ジーベック", "kishu": "古川奈", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "差し", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ストロングボンド", "kishu": "石川倭", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "先行", "wakuHalf": "外", "baseProb": 1.5}, {"name": "スパークルジョイ", "kishu": "舟山", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 5.3}, {"name": "タッカージーティー", "kishu": "横山典", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "差し", "wakuHalf": "外", "baseProb": 15.7}, {"name": "ナムラモモ", "kishu": "小沢", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "パールフロント", "kishu": "武豊", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "差し", "wakuHalf": "外", "baseProb": 37.9}, {"name": "ビーマックス", "kishu": "浜中", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "フェデルミエール", "kishu": "石田", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "先行", "wakuHalf": "外", "baseProb": 3.0}, {"name": "ベニシア", "kishu": "原田和", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "差し", "wakuHalf": "外", "baseProb": 1.5}, {"name": "マメタンク", "kishu": "斎藤", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "先行", "wakuHalf": "外", "baseProb": 30.9}, {"name": "ミニョンマルーン", "kishu": "長浜", "ninki": 17, "odds": 10.0, "umaban": 17, "waku": 17, "style": "逃げ", "wakuHalf": "外", "baseProb": 7.1}, {"name": "ララアヴリル", "kishu": "小林美", "ninki": 18, "odds": 10.0, "umaban": 18, "waku": 18, "style": "先行", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ランドスター", "kishu": "小林美", "ninki": 19, "odds": 10.0, "umaban": 19, "waku": 19, "style": "差し", "wakuHalf": "外", "baseProb": 12.5}]}, {"venue": "新潟", "raceNum": 7, "raceId": "202604020807", "horses": [{"name": "アッチャゴーラ", "kishu": "小崎", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "差し", "wakuHalf": "内", "baseProb": 24.6}, {"name": "アドバンスファラオ", "kishu": "高倉", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "逃げ", "wakuHalf": "内", "baseProb": 3.0}, {"name": "イスラアネーロ", "kishu": "川又", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "先行", "wakuHalf": "内", "baseProb": 2.4}, {"name": "イミュータブル", "kishu": "長浜", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "先行", "wakuHalf": "内", "baseProb": 6.8}, {"name": "エコロガイア", "kishu": "中井", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "エスカル", "kishu": "丸山", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "追込", "wakuHalf": "外", "baseProb": 20.6}, {"name": "カンパニョーラ", "kishu": "吉田豊", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "追込", "wakuHalf": "外", "baseProb": 4.6}, {"name": "グロリアラウス", "kishu": "杉原", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "逃げ", "wakuHalf": "外", "baseProb": 20.3}, {"name": "コンクイスタ", "kishu": "西村淳", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 32.2}, {"name": "サフランヒーロー", "kishu": "川端", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "先行", "wakuHalf": "外", "baseProb": 2.4}, {"name": "ジョーローリット", "kishu": "武藤", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "逃げ", "wakuHalf": "外", "baseProb": 15.1}, {"name": "スリーピース", "kishu": "酒井", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "先行", "wakuHalf": "外", "baseProb": 4.6}, {"name": "ダノンタッチダウン", "kishu": "キング", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "差し", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ファムエレガンテ", "kishu": "三浦", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "逃げ", "wakuHalf": "外", "baseProb": 32.2}, {"name": "マイネルジェロディ", "kishu": "木幡巧", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "先行", "wakuHalf": "外", "baseProb": 4.3}, {"name": "ヤマニンアルリフラ", "kishu": "団野", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "差し", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ライジン", "kishu": "岩田望", "ninki": 17, "odds": 10.0, "umaban": 17, "waku": 17, "style": "差し", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ロードフロンティア", "kishu": "川須", "ninki": 18, "odds": 10.0, "umaban": 18, "waku": 18, "style": "先行", "wakuHalf": "外", "baseProb": 15.7}, {"name": "ワイワイレジェンド", "kishu": "津村", "ninki": 19, "odds": 10.0, "umaban": 19, "waku": 19, "style": "逃げ", "wakuHalf": "外", "baseProb": 17.3}]}, {"venue": "中京", "raceNum": 7, "raceId": "202607020807", "horses": [{"name": "カズミクラーシュ", "kishu": "Ｍデムー", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "先行", "wakuHalf": "内", "baseProb": 5.3}, {"name": "カネラフィーナ", "kishu": "石川", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "先行", "wakuHalf": "内", "baseProb": 43.8}, {"name": "カンシン", "kishu": "団野", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "差し", "wakuHalf": "内", "baseProb": 20.6}, {"name": "キープカルム", "kishu": "柴田裕", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "差し", "wakuHalf": "内", "baseProb": 20.6}, {"name": "ケイズレーヴ", "kishu": "渡辺竜", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "差し", "wakuHalf": "外", "baseProb": 5.3}, {"name": "サトノシャイニング", "kishu": "コレット", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "先行", "wakuHalf": "外", "baseProb": 43.8}, {"name": "ショウナンアデイブ", "kishu": "田山", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "先行", "wakuHalf": "外", "baseProb": 4.6}, {"name": "スイープアワーズ", "kishu": "国分優", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "差し", "wakuHalf": "外", "baseProb": 12.0}, {"name": "チェルビアット", "kishu": "吉村", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "差し", "wakuHalf": "外", "baseProb": 20.6}, {"name": "ナムラコスモス", "kishu": "田口", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "先行", "wakuHalf": "外", "baseProb": 24.6}, {"name": "ファントムシーフ", "kishu": "", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "先行", "wakuHalf": "外", "baseProb": 5.3}, {"name": "ブエナオンダ", "kishu": "菱田", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "差し", "wakuHalf": "外", "baseProb": 7.1}, {"name": "ミナデオロ", "kishu": "", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "先行", "wakuHalf": "外", "baseProb": 13.0}, {"name": "ミニトランザット", "kishu": "松山", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "差し", "wakuHalf": "外", "baseProb": 20.3}, {"name": "ラヴァンダ", "kishu": "岩田望", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "先行", "wakuHalf": "外", "baseProb": 5.2}, {"name": "リラエンブレム", "kishu": "富田", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "先行", "wakuHalf": "外", "baseProb": 6.8}, {"name": "リリージョワ", "kishu": "浜中", "ninki": 17, "odds": 10.0, "umaban": 17, "waku": 17, "style": "先行", "wakuHalf": "外", "baseProb": 12.0}]}, {"venue": "札幌", "raceNum": 11, "raceId": "202601010811", "horses": [{"name": "アドマイヤテラ", "kishu": "坂井", "ninki": 1, "odds": 10.0, "umaban": 1, "waku": 1, "style": "差し", "wakuHalf": "内", "baseProb": 50.1}, {"name": "アラタ", "kishu": "大野", "ninki": 2, "odds": 10.0, "umaban": 2, "waku": 2, "style": "差し", "wakuHalf": "内", "baseProb": 2.4}, {"name": "イガッチ", "kishu": "吉田隼", "ninki": 3, "odds": 10.0, "umaban": 3, "waku": 3, "style": "先行", "wakuHalf": "内", "baseProb": 15.1}, {"name": "エコロヴァルツ", "kishu": "横山武", "ninki": 4, "odds": 10.0, "umaban": 4, "waku": 4, "style": "先行", "wakuHalf": "内", "baseProb": 13.0}, {"name": "オニャンコポン", "kishu": "横山琉", "ninki": 5, "odds": 10.0, "umaban": 5, "waku": 5, "style": "差し", "wakuHalf": "外", "baseProb": 5.3}, {"name": "グランディア", "kishu": "西村淳", "ninki": 6, "odds": 10.0, "umaban": 6, "waku": 6, "style": "差し", "wakuHalf": "外", "baseProb": 12.0}, {"name": "サクラファレル", "kishu": "佐々木", "ninki": 7, "odds": 10.0, "umaban": 7, "waku": 7, "style": "逃げ", "wakuHalf": "外", "baseProb": 48.1}, {"name": "シェイクユアハート", "kishu": "古川吉", "ninki": 8, "odds": 10.0, "umaban": 8, "waku": 8, "style": "差し", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ショウヘイ", "kishu": "川田", "ninki": 9, "odds": 10.0, "umaban": 9, "waku": 9, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ゼンダンハヤブサ", "kishu": "酒井", "ninki": 10, "odds": 10.0, "umaban": 10, "waku": 10, "style": "差し", "wakuHalf": "外", "baseProb": 20.6}, {"name": "ピンクジン", "kishu": "", "ninki": 11, "odds": 10.0, "umaban": 11, "waku": 11, "style": "先行", "wakuHalf": "外", "baseProb": 15.1}, {"name": "ホウオウビスケッツ", "kishu": "岩田康", "ninki": 12, "odds": 10.0, "umaban": 12, "waku": 12, "style": "逃げ", "wakuHalf": "外", "baseProb": 12.0}, {"name": "マイネルモーント", "kishu": "", "ninki": 13, "odds": 10.0, "umaban": 13, "waku": 13, "style": "差し", "wakuHalf": "外", "baseProb": 18.0}, {"name": "マジックサンズ", "kishu": "横山和", "ninki": 14, "odds": 10.0, "umaban": 14, "waku": 14, "style": "差し", "wakuHalf": "外", "baseProb": 10.8}, {"name": "レディネス", "kishu": "横山典", "ninki": 15, "odds": 10.0, "umaban": 15, "waku": 15, "style": "差し", "wakuHalf": "外", "baseProb": 10.3}, {"name": "ローシャムパーク", "kishu": "", "ninki": 16, "odds": 10.0, "umaban": 16, "waku": 16, "style": "差し", "wakuHalf": "外", "baseProb": 10.3}]}], "ninkiBaseline": {"1": 0.648, "2": 0.5249, "3": 0.4159, "4": 0.3376, "5": 0.2696, "6": 0.2192, "7": 0.1634, "8": 0.1276, "9": 0.1025, "10": 0.0776, "11": 0.0619, "12": 0.0469, "13": 0.0321, "14": 0.0264, "15": 0.0239, "16": 0.0138, "17": 0.0107, "18": 0.0063}, "flagThreshold": 0.08};
+let bias = { pace: "flat", waku: "flat", baba: "flat" };
+
+document.querySelectorAll(".bias-btns").forEach(group => {
+  const g = group.dataset.group;
+  group.querySelectorAll(".bias-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      bias[g] = btn.dataset.val;
+      group.querySelectorAll(".bias-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    });
+  });
+});
+document.getElementById("adjustAmount").addEventListener("input", render);
+
+function adjustedProb(horse) {
+  if (horse.baseProb === null) return null;
+  const amount = parseFloat(document.getElementById("adjustAmount").value) || 0;
+  let delta = 0;
+  // 展開・馬場：前有利/高速 → 逃げ・先行にプラス、差し有利/時計かかる → 差し・追込にプラス
+  const paceDir = (bias.pace === "front" ? 1 : bias.pace === "close" ? -1 : 0)
+                 + (bias.baba === "fast" ? 1 : bias.baba === "slow" ? -1 : 0);
+  if (paceDir !== 0) {
+    const frontStyle = (horse.style === "逃げ" || horse.style === "先行");
+    const closeStyle = (horse.style === "差し" || horse.style === "追込");
+    if (frontStyle) delta += paceDir * amount;
+    if (closeStyle) delta -= paceDir * amount;
+  }
+  // 枠：内有利 → 内枠にプラス、外有利 → 外枠にプラス
+  const wakuDir = (bias.waku === "in" ? 1 : bias.waku === "out" ? -1 : 0);
+  if (wakuDir !== 0) {
+    if (horse.wakuHalf === "内") delta += wakuDir * amount;
+    if (horse.wakuHalf === "外") delta -= wakuDir * amount;
+  }
+  let p = horse.baseProb + delta;
+  return Math.max(0, Math.min(100, p));
+}
+
+function flagFor(horse, prob) {
+  if (prob === null) return "";
+  const baseline = DATA.ninkiBaseline[String(horse.ninki)];
+  if (baseline === undefined) return "";
+  const diff = (prob / 100) - baseline;
+  if (diff <= -DATA.flagThreshold) return '<span class="flag-warn">⚠️AI警告</span>';
+  if (diff >= DATA.flagThreshold) return '<span class="flag-star">★AI注目</span>';
+  return "";
+}
+
+function render() {
+  const container = document.getElementById("races");
+  container.innerHTML = "";
+  DATA.races.forEach(race => {
+    const card = document.createElement("div");
+    card.className = "race-card";
+    let rows = "";
+    race.horses.forEach(h => {
+      const p = adjustedProb(h);
+      const pStr = p === null ? "-" : p.toFixed(1) + "%";
+      rows += `<tr>
+        <td>${h.ninki}</td>
+        <td>${h.name}<br><span style="color:#999;font-size:11px;">${h.kishu} / ${h.waku}枠${h.umaban}番 / ${h.style}</span></td>
+        <td>${h.odds.toFixed(1)}</td>
+        <td class="prob">${pStr}</td>
+        <td>${flagFor(h, p)}</td>
+      </tr>`;
+    });
+    card.innerHTML = `<div class="race-title">${race.venue} ${race.raceNum}R</div>
+      <table>
+        <tr><th>人気</th><th>馬名</th><th>単勝</th><th>AI複勝%</th><th></th></tr>
+        ${rows}
+      </table>`;
+    container.appendChild(card);
+  });
+}
+render();
+</script>
+</body>
+</html>
