@@ -29,10 +29,16 @@
   .flag-warn { color: #ff3b30; font-size: 11px; }
   .flag-star { color: #ff9500; font-size: 11px; }
   .note { font-size: 11px; color: #999; margin-top: 6px; line-height: 1.5; }
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .toc-chip { background: #fff; border: 1px solid #d1d1d6; border-radius: 16px; padding: 6px 12px;
+              font-size: 13px; color: #007aff; text-decoration: none; }
+  [id^="venue-"] { scroll-margin-top: 8px; }
 </style>
 </head>
 <body>
 <h1>競馬予想 2026/08/15週末</h1>
+
+<div id="toc" class="toc"></div>
 
 <div class="bias-panel">
   <div class="adjust-row" style="margin-top:0;">
@@ -148,8 +154,14 @@ function render() {
     grouped[race.venue].push(race);
   });
 
+  const tocEl = document.getElementById("toc");
+  if (tocEl) {
+    tocEl.innerHTML = venues.map(v => `<a href="#venue-${v}" class="toc-chip">${v}</a>`).join("");
+  }
+
   venues.forEach(venue => {
     const section = document.createElement("div");
+    section.id = "venue-" + venue;
     section.innerHTML = `<div class="venue-title">${venue}</div>` + biasPanelHtml(venue);
     container.appendChild(section);
     bindBiasButtons(section.querySelector(".bias-panel"), venue);
